@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe Resque::Plugins::Brokered::Broker do
-  let(:redis) {mock :redis, :unwatch => nil, :namespace => 'ns', :watch => nil, :sadd => nil, :lpop => nil}
+  let(:redis) {double :redis, :unwatch => nil, :namespace => 'ns', :watch => nil, :sadd => nil, :lpop => nil}
   let(:queues) {['']}
   subject{Resque::Plugins::Brokered::Broker.new redis, queues}
 
