@@ -39,6 +39,12 @@ describe Resque::Plugins::Brokered::Broker do
   end
 
   describe '#pop' do
+    it 'watches the unprefixed active_queues key (Redis::Namespace adds the namespace)' do
+      redis.stub :sdiff => []
+      redis.should_receive(:watch).with(:active_queues)
+      subject.pop
+    end
+
     context 'when there are no available queues' do
       before(:each) {redis.stub :sdiff => []}
       it 'returns nil' do
@@ -55,7 +61,7 @@ describe Resque::Plugins::Brokered::Broker do
     end
 
     context 'when the redis execute returns nil' do
-      before(:each) {redis.stub :sdiff => ['a_queue'], :llen => 2, :multi => nil, :exec => nil}
+      before(:each) {redis.stub :sdiff => ['a_queue'], :llen => 2, :multi => [nil, nil]}
       it 'returns a tuple including nil' do
         name, result = subject.pop
         result.should be_nil
@@ -63,7 +69,7 @@ describe Resque::Plugins::Brokered::Broker do
     end
 
     context 'when a job is sucessfully popped from a queue' do
-      before(:each) {redis.stub :sdiff => ['a_queue'], :llen => 2, :multi => nil, :exec => ['name', '{"some": "json"}']}
+      before(:each) {redis.stub :sdiff => ['a_queue'], :llen => 2, :multi => ['name', '{"some": "json"}']}
       it 'returns the popped job and queue name as a tuple' do
         subject.pop.should == ['a_queue', {'some' => 'json'}]
       end
